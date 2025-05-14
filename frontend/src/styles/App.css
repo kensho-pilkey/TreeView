@@ -4,6 +4,7 @@
   flex-direction: column;
   color: #333;
   background-color: #f5f5f5;
+  width: 100%;
 }
 
 .app-header {
@@ -12,6 +13,7 @@
   padding: 20px 0;
   text-align: center;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  width: 100%;
 }
 
 .app-header h1 {
@@ -22,6 +24,14 @@
 .app-main {
   flex: 1;
   padding: 30px 15px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.app-main > * {
+  width: 100%;
+  max-width: 1600px; /* Optional: sets a max-width for very large screens */
 }
 
 .app-footer {
@@ -30,6 +40,15 @@
   text-align: center;
   padding: 15px 0;
   font-size: 14px;
+  width: 100%;
+}
+
+/* Fix for any side margins or paddings */
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 /* Media query for responsiveness */

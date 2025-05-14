@@ -24,10 +24,10 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
+  padding: 0;
+  width: 100%;
   min-height: 100vh;
+  /* Removed display: flex and place-items: center which were causing centering issues */
 }
 
 h1 {
@@ -52,6 +52,25 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Override button styles for tree view specific buttons */
+.add-factory-btn,
+.factory-btn {
+  padding: 0;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.add-factory-btn {
+  background-color: #22c55e;
+}
+
+.add-factory-btn:hover {
+  border-color: transparent;
+  background-color: #16a34a;
 }
 
 @media (prefers-color-scheme: light) {
