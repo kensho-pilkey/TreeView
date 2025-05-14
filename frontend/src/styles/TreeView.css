@@ -1,0 +1,75 @@
+.tree-view-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.tree-view-container h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #333;
+}
+
+.tree-view {
+  margin-bottom: 40px;
+}
+
+.root-node {
+  border: 2px solid #3498db;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.node-content {
+  background-color: #3498db;
+  padding: 12px 20px;
+  color: white;
+}
+
+.node-content h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.factories-container {
+  padding: 20px;
+  background-color: #f9f9f9;
+}
+
+.factories-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.factory-item {
+  margin-bottom: 15px;
+}
+
+.factory-placeholder {
+  border: 1px dashed #ccc;
+  padding: 10px;
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+.no-factories {
+  text-align: center;
+  padding: 20px;
+  color: #777;
+  font-style: italic;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.factory-form-placeholder {
+  margin-top: 30px;
+  padding: 20px;
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+  text-align: center;
+  color: #777;
+  background-color: #f5f5f5;
+}
