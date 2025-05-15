@@ -1,15 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 from typing import List
 import random
 import uuid
-from sqlalchemy.orm import selectinload
+import traceback
 
 from app.db.database import get_db
 from app.db.models.tree import Tree, Factory, Child
 from app.schemas.tree import (
-    TreeCreate, TreeUpdate, TreeResponse, Tree as TreeSchema,
+    TreeResponse, Tree as TreeSchema,
     FactoryCreate, FactoryUpdate, FactoryResponse, Factory as FactorySchema,
     Child as ChildSchema
 )
@@ -17,188 +18,88 @@ from app.websockets.connection_manager import manager
 
 router = APIRouter()
 
-# Tree endpoints
-@router.post("/trees", response_model=TreeResponse, status_code=status.HTTP_201_CREATED)
-async def create_tree(
-    tree_data: TreeCreate,
-    db: AsyncSession = Depends(get_db)
-):
-    try:
-        # Create new tree
-        new_tree = Tree(name=tree_data.name)
-        db.add(new_tree)
+# Helper function to get the default tree ID
+async def get_default_tree_id(db: AsyncSession):
+    # Get the first tree from the database (there should only be one)
+    stmt = select(Tree)
+    result = await db.execute(stmt)
+    tree = result.scalars().first()
+    
+    if not tree:
+        # This shouldn't happen since we create a default tree on startup
+        # But just in case, create one now
+        tree = Tree(name="Default Tree")
+        db.add(tree)
         await db.commit()
-        await db.refresh(new_tree)
-        
-        # Notify all connected clients
-        await manager.broadcast({
-            "action": "tree_created",
-            "data": {
-                "id": str(new_tree.id),
-                "name": new_tree.name,
-                "factories": []
-            }
-        })
-        
-        return {
-            "message": "Tree created successfully",
-            "data": new_tree
-        }
-    except Exception as e:
-        await db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create tree: {str(e)}"
-        )
+        await db.refresh(tree)
+        print(f"Created new default tree with ID {tree.id}")
+    
+    return tree.id
 
-@router.get("/trees/{tree_id}", response_model=TreeResponse)
-async def get_tree(
-    tree_id: uuid.UUID, 
-    db: AsyncSession = Depends(get_db)
-):
+# Get the default tree with all its data
+@router.get("/tree", response_model=TreeResponse)
+async def get_tree(db: AsyncSession = Depends(get_db)):
     try:
-        # Query tree with its factories and children
-        query = select(Tree).where(Tree.id == tree_id)
-        result = await db.execute(query)
-        tree = result.scalars().first()
+        # Get the default tree ID
+        tree_id = await get_default_tree_id(db)
+        
+        # Query tree with explicit join loading for factories and children
+        stmt = select(Tree).where(Tree.id == tree_id).options(
+            selectinload(Tree.factories).selectinload(Factory.children)
+        )
+        result = await db.execute(stmt)
+        tree = result.unique().scalars().first()
         
         if not tree:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Tree with ID {tree_id} not found"
+                detail="Default tree not found in database"
             )
         
+        # Create response manually to avoid lazy loading
         return {
             "message": "Tree retrieved successfully",
-            "data": tree
+            "data": TreeSchema(
+                id=tree.id,
+                name=tree.name,
+                factories=[
+                    FactorySchema(
+                        id=factory.id,
+                        name=factory.name,
+                        lower_bound=factory.lower_bound,
+                        upper_bound=factory.upper_bound,
+                        child_count=factory.child_count,
+                        tree_id=factory.tree_id,
+                        children=[
+                            ChildSchema(
+                                id=child.id,
+                                value=child.value,
+                                factory_id=child.factory_id
+                            ) for child in factory.children
+                        ]
+                    ) for factory in tree.factories
+                ]
+            )
         }
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Error retrieving tree: {str(e)}")
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve tree: {str(e)}"
         )
 
-@router.get("/trees", response_model=List[TreeSchema])
-async def get_all_trees(db: AsyncSession = Depends(get_db)):
-    try:
-        # Query all trees
-        query = select(Tree)
-        result = await db.execute(query)
-        trees = result.scalars().all()
-        
-        return trees
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve trees: {str(e)}"
-        )
-
-@router.put("/trees/{tree_id}", response_model=TreeResponse)
-async def update_tree(
-    tree_id: uuid.UUID,
-    tree_data: TreeUpdate,
-    db: AsyncSession = Depends(get_db)
-):
-    try:
-        # Query existing tree
-        query = select(Tree).where(Tree.id == tree_id)
-        result = await db.execute(query)
-        tree = result.scalars().first()
-        
-        if not tree:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Tree with ID {tree_id} not found"
-            )
-        
-        # Update tree properties
-        if tree_data.name is not None:
-            tree.name = tree_data.name
-        
-        await db.commit()
-        await db.refresh(tree)
-        
-        # Notify all connected clients
-        await manager.broadcast({
-            "action": "tree_updated",
-            "data": {
-                "id": str(tree.id),
-                "name": tree.name
-            }
-        })
-        
-        return {
-            "message": "Tree updated successfully",
-            "data": tree
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        await db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update tree: {str(e)}"
-        )
-
-@router.delete("/trees/{tree_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_tree(
-    tree_id: uuid.UUID,
-    db: AsyncSession = Depends(get_db)
-):
-    try:
-        # Query existing tree
-        query = select(Tree).where(Tree.id == tree_id)
-        result = await db.execute(query)
-        tree = result.scalars().first()
-        
-        if not tree:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Tree with ID {tree_id} not found"
-            )
-        
-        # Delete tree (cascade will delete factories and children)
-        await db.delete(tree)
-        await db.commit()
-        
-        # Notify all connected clients
-        await manager.broadcast({
-            "action": "tree_deleted",
-            "data": {
-                "id": str(tree_id)
-            }
-        })
-        
-        return None
-    except HTTPException:
-        raise
-    except Exception as e:
-        await db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete tree: {str(e)}"
-        )
-
 # Factory endpoints
-@router.post("/trees/{tree_id}/factories", response_model=FactoryResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/factories", response_model=FactoryResponse, status_code=status.HTTP_201_CREATED)
 async def create_factory(
-    tree_id: uuid.UUID,
     factory_data: FactoryCreate,
     db: AsyncSession = Depends(get_db)
 ):
     try:
-        # Check if tree exists
-        query = select(Tree).where(Tree.id == tree_id)
-        result = await db.execute(query)
-        tree = result.scalars().first()
-        
-        if not tree:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Tree with ID {tree_id} not found"
-            )
+        # Get the default tree ID
+        tree_id = await get_default_tree_id(db)
         
         # Validate bounds
         if factory_data.lower_bound >= factory_data.upper_bound:
@@ -226,6 +127,17 @@ async def create_factory(
         await db.commit()
         await db.refresh(new_factory)
         
+        # Create a Pydantic model to avoid lazy loading
+        factory_response = FactorySchema(
+            id=new_factory.id,
+            name=new_factory.name,
+            lower_bound=new_factory.lower_bound,
+            upper_bound=new_factory.upper_bound,
+            child_count=new_factory.child_count,
+            tree_id=new_factory.tree_id,
+            children=[]
+        )
+        
         # Notify all connected clients
         await manager.broadcast({
             "action": "factory_created",
@@ -242,12 +154,14 @@ async def create_factory(
         
         return {
             "message": "Factory created successfully",
-            "data": new_factory
+            "data": factory_response
         }
     except HTTPException:
         raise
     except Exception as e:
         await db.rollback()
+        print(f"Error creating factory: {str(e)}")
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create factory: {str(e)}"
@@ -261,8 +175,8 @@ async def update_factory(
 ):
     try:
         # Query existing factory
-        query = select(Factory).where(Factory.id == factory_id)
-        result = await db.execute(query)
+        stmt = select(Factory).where(Factory.id == factory_id)
+        result = await db.execute(stmt)
         factory = result.scalars().first()
         
         if not factory:
@@ -300,6 +214,17 @@ async def update_factory(
         await db.commit()
         await db.refresh(factory)
         
+        # Create a Pydantic model to avoid lazy loading
+        factory_response = FactorySchema(
+            id=factory.id,
+            name=factory.name,
+            lower_bound=factory.lower_bound,
+            upper_bound=factory.upper_bound,
+            child_count=factory.child_count,
+            tree_id=factory.tree_id,
+            children=[]  # We don't need children for update response
+        )
+        
         # Notify all connected clients
         await manager.broadcast({
             "action": "factory_updated",
@@ -315,12 +240,14 @@ async def update_factory(
         
         return {
             "message": "Factory updated successfully",
-            "data": factory
+            "data": factory_response
         }
     except HTTPException:
         raise
     except Exception as e:
         await db.rollback()
+        print(f"Error updating factory: {str(e)}")
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update factory: {str(e)}"
@@ -333,8 +260,8 @@ async def delete_factory(
 ):
     try:
         # Query existing factory
-        query = select(Factory).where(Factory.id == factory_id)
-        result = await db.execute(query)
+        stmt = select(Factory).where(Factory.id == factory_id)
+        result = await db.execute(stmt)
         factory = result.scalars().first()
         
         if not factory:
@@ -363,6 +290,8 @@ async def delete_factory(
         raise
     except Exception as e:
         await db.rollback()
+        print(f"Error deleting factory: {str(e)}")
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete factory: {str(e)}"
@@ -375,8 +304,8 @@ async def generate_children(
 ):
     try:
         # Query existing factory
-        query = select(Factory).where(Factory.id == factory_id)
-        result = await db.execute(query)
+        stmt = select(Factory).where(Factory.id == factory_id)
+        result = await db.execute(stmt)
         factory = result.scalars().first()
         
         if not factory:
@@ -386,8 +315,8 @@ async def generate_children(
             )
         
         # Delete existing children
-        delete_query = select(Child).where(Child.factory_id == factory_id)
-        delete_result = await db.execute(delete_query)
+        delete_stmt = select(Child).where(Child.factory_id == factory_id)
+        delete_result = await db.execute(delete_stmt)
         existing_children = delete_result.scalars().all()
         
         for child in existing_children:
@@ -403,18 +332,38 @@ async def generate_children(
         
         await db.commit()
         
-        # Refresh factory to get updated children
-        await db.refresh(factory)
+        # Refresh factory to get updated children (with explicit loading)
+        stmt = select(Factory).where(Factory.id == factory_id).options(
+            selectinload(Factory.children)
+        )
+        result = await db.execute(stmt)
+        refreshed_factory = result.scalars().first()
         
-        # Create a list of child data for WebSocket message
-        children_data = [
-            {
+        # Create a list of child data for response and WebSocket
+        children_data = []
+        for child in refreshed_factory.children:
+            children_data.append({
                 "id": str(child.id),
                 "value": child.value,
                 "factory_id": str(child.factory_id)
-            }
-            for child in factory.children
-        ]
+            })
+        
+        # Create Pydantic model for response
+        factory_response = FactorySchema(
+            id=refreshed_factory.id,
+            name=refreshed_factory.name,
+            lower_bound=refreshed_factory.lower_bound,
+            upper_bound=refreshed_factory.upper_bound,
+            child_count=refreshed_factory.child_count,
+            tree_id=refreshed_factory.tree_id,
+            children=[
+                ChildSchema(
+                    id=child.id,
+                    value=child.value,
+                    factory_id=child.factory_id
+                ) for child in refreshed_factory.children
+            ]
+        )
         
         # Notify all connected clients
         await manager.broadcast({
@@ -427,12 +376,14 @@ async def generate_children(
         
         return {
             "message": "Children generated successfully",
-            "data": factory
+            "data": factory_response
         }
     except HTTPException:
         raise
     except Exception as e:
         await db.rollback()
+        print(f"Error generating children: {str(e)}")
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to generate children: {str(e)}"
