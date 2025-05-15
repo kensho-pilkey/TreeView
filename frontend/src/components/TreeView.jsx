@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import '../styles/TreeView.css';
 import { PlusCircle, Wifi, WifiOff, Loader } from 'lucide-react';
 import FactoryNode from './FactoryNode';
@@ -50,24 +50,42 @@ const TreeView = () => {
     await generateChildren(factoryId);
   };
   
-  const calculateFactoryPositions = () => {
-    const totalFactories = tree.factories.length;
+  const uniqueFactories = useMemo(() => {
+    const factoryMap = new Map();
+    
+    // Only keep one instance of each factory ID
+    tree.factories.forEach(factory => {
+      if (factory && factory.id && !factoryMap.has(factory.id)) {
+        factoryMap.set(factory.id, factory);
+      }
+    });
+    
+    // Convert back to array
+    return Array.from(factoryMap.values());
+  }, [tree.factories]);
+  
+  // Calculate positions based on unique factories
+  const factoryPositions = useMemo(() => {
+    const totalFactories = uniqueFactories.length;
     if (totalFactories === 0) return [];
+    
+    // Sort factories by ID for consistent positioning
+    const sortedFactories = [...uniqueFactories].sort((a, b) => 
+      a.id.localeCompare(b.id)
+    );
     
     const radius = 250;
     const positions = [];
     
-    for (let i = 0; i < totalFactories; i++) {
-      const angle = (i / totalFactories) * 2 * Math.PI;
+    for (let i = 0; i < sortedFactories.length; i++) {
+      const angle = (i / sortedFactories.length) * 2 * Math.PI;
       const x = radius * Math.cos(angle);
       const y = radius * Math.sin(angle);
-      positions.push({ id: tree.factories[i].id, x, y });
+      positions.push({ id: sortedFactories[i].id, x, y });
     }
     
     return positions;
-  };
-  
-  const factoryPositions = calculateFactoryPositions();
+  }, [uniqueFactories]);
   
   // Render error notification if there's an error
   const renderError = () => {
@@ -124,7 +142,7 @@ const TreeView = () => {
           </div>
           
           <div className="factories-container">
-            {tree.factories.map((factory) => {
+            {uniqueFactories.map((factory) => {
               const position = factoryPositions.find(pos => pos.id === factory.id);
               if (!position) return null;
               
@@ -133,7 +151,7 @@ const TreeView = () => {
               
               return (
                 <div 
-                  key={factory.id} 
+                  key={`factory-${factory.id}`}
                   className="factory-branch"
                   style={{
                     transform: `translate(${position.x}px, ${position.y}px)`
