@@ -1,88 +1,25 @@
 import React, { useState } from 'react';
 import '../styles/TreeView.css';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Wifi, WifiOff, Loader } from 'lucide-react';
 import FactoryNode from './FactoryNode';
 import FactoryForm from './FactoryForm';
+import { useTree } from '../context/TreeContext';
 
 const TreeView = () => {
-  const [tree, setTree] = useState({
-    id: 'root',
-    name: 'Root',
-    factories: []
-  });
+  const { 
+    tree, 
+    loading, 
+    error, 
+    socketConnected,
+    addFactory, 
+    updateFactory, 
+    deleteFactory, 
+    generateChildren,
+    clearError 
+  } = useTree();
+  
   const [editingFactory, setEditingFactory] = useState(null);
   const [showFactoryForm, setShowFactoryForm] = useState(false);
-  
-  const addFactory = (formData) => {
-    const newFactory = {
-      id: `factory-${Date.now()}`,
-      name: formData.name || `Factory ${tree.factories.length + 1}`,
-      lowerBound: parseInt(formData.lowerBound),
-      upperBound: parseInt(formData.upperBound),
-      childCount: parseInt(formData.childCount),
-      children: []
-    };
-    setTree({
-      ...tree,
-      factories: [...tree.factories, newFactory]
-    });
-    setShowFactoryForm(false);
-    setEditingFactory(null);
-  };
-  
-  const updateFactory = (factoryId, formData) => {
-    const updatedFactories = tree.factories.map(factory => {
-      if (factory.id === factoryId) {
-        return {
-          ...factory,
-          name: formData.name,
-          lowerBound: parseInt(formData.lowerBound),
-          upperBound: parseInt(formData.upperBound),
-          childCount: parseInt(formData.childCount)
-        };
-      }
-      return factory;
-    });
-    setTree({
-      ...tree,
-      factories: updatedFactories
-    });
-    setShowFactoryForm(false);
-    setEditingFactory(null);
-  };
-  
-  const deleteFactory = (factoryId) => {
-    setTree({
-      ...tree,
-      factories: tree.factories.filter(factory => factory.id !== factoryId)
-    });
-  };
-  
-  const generateChildren = (factoryId) => {
-    const updatedFactories = tree.factories.map(factory => {
-      if (factory.id === factoryId) {
-        const newChildren = [];
-        for (let i = 0; i < factory.childCount; i++) {
-          const randomValue = Math.floor(
-            Math.random() * (factory.upperBound - factory.lowerBound + 1) + factory.lowerBound
-          );
-          newChildren.push({
-            id: `child-${factoryId}-${i}-${Date.now()}`,
-            value: randomValue
-          });
-        }
-        return {
-          ...factory,
-          children: newChildren
-        };
-      }
-      return factory;
-    });
-    setTree({
-      ...tree,
-      factories: updatedFactories
-    });
-  };
   
   const handleAddFactory = () => {
     setEditingFactory(null);
@@ -92,6 +29,25 @@ const TreeView = () => {
   const handleEditFactory = (factory) => {
     setEditingFactory(factory);
     setShowFactoryForm(true);
+  };
+  
+  const handleSaveFactory = async (formData) => {
+    if (editingFactory) {
+      await updateFactory(editingFactory.id, formData);
+    } else {
+      await addFactory(formData);
+    }
+    
+    setShowFactoryForm(false);
+    setEditingFactory(null);
+  };
+  
+  const handleDeleteFactory = async (factoryId) => {
+    await deleteFactory(factoryId);
+  };
+  
+  const handleGenerateChildren = async (factoryId) => {
+    await generateChildren(factoryId);
   };
   
   const calculateFactoryPositions = () => {
@@ -113,8 +69,47 @@ const TreeView = () => {
   
   const factoryPositions = calculateFactoryPositions();
   
+  // Render error notification if there's an error
+  const renderError = () => {
+    if (!error) return null;
+    
+    return (
+      <div className="error-notification">
+        <div className="error-content">
+          <div className="error-message">{error}</div>
+          <button className="error-close" onClick={clearError}>×</button>
+        </div>
+      </div>
+    );
+  };
+  
   return (
     <div className="tree-view">
+      {/* Connection status indicator */}
+      <div className={`connection-status ${socketConnected ? 'connected' : 'disconnected'}`}>
+        {socketConnected ? (
+          <>
+            <Wifi size={16} />
+            <span>Connected</span>
+          </>
+        ) : (
+          <>
+            <WifiOff size={16} />
+            <span>Disconnected</span>
+          </>
+        )}
+      </div>
+      
+      {/* Loading indicator */}
+      {loading && (
+        <div className="loading-overlay">
+          <Loader size={32} className="spinner" />
+        </div>
+      )}
+      
+      {/* Error notification */}
+      {renderError()}
+      
       <div className="tree-visualization">
         <div className="root-node-container">
           <div className="root-node">
@@ -122,6 +117,7 @@ const TreeView = () => {
             <button 
               className="add-factory-btn" 
               onClick={handleAddFactory}
+              title="Add Factory"
             >
               <PlusCircle size={20} />
             </button>
@@ -156,8 +152,8 @@ const TreeView = () => {
                   <FactoryNode 
                     factory={factory}
                     onEdit={() => handleEditFactory(factory)}
-                    onDelete={() => deleteFactory(factory.id)}
-                    onGenerateChildren={() => generateChildren(factory.id)}
+                    onDelete={() => handleDeleteFactory(factory.id)}
+                    onGenerateChildren={() => handleGenerateChildren(factory.id)}
                   />
                 </div>
               );
@@ -169,13 +165,7 @@ const TreeView = () => {
       {showFactoryForm && (
         <FactoryForm 
           factory={editingFactory}
-          onSave={(formData) => {
-            if (editingFactory) {
-              updateFactory(editingFactory.id, formData);
-            } else {
-              addFactory(formData);
-            }
-          }}
+          onSave={handleSaveFactory}
           onCancel={() => {
             setShowFactoryForm(false);
             setEditingFactory(null);
