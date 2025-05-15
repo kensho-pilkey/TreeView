@@ -1,5 +1,7 @@
+import React from 'react';
+import './App.css';
 import TreeView from './components/TreeView';
-import './styles/App.css';
+import { TreeProvider } from './context/TreeContext';
 
 function App() {
   return (
@@ -9,11 +11,13 @@ function App() {
       </header>
       
       <main className="app-main">
-        <TreeView />
+        <TreeProvider>
+          <TreeView />
+        </TreeProvider>
       </main>
       
       <footer className="app-footer">
-        <p>Tree View Application - &copy; 2025</p>
+        <p>Tree View Application | Real-time Tree View</p>
       </footer>
     </div>
   );
