@@ -26,8 +26,7 @@ async def get_default_tree_id(db: AsyncSession):
     tree = result.scalars().first()
     
     if not tree:
-        # This shouldn't happen since we create a default tree on startup
-        # But just in case, create one now
+        # Create default tree if there isn't one
         tree = Tree(name="Default Tree")
         db.add(tree)
         await db.commit()
