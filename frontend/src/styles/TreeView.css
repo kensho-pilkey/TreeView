@@ -41,6 +41,7 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   position: relative;
   transition: all 0.3s ease;
+  z-index: 11;
 }
 
 .root-node:hover {
