@@ -1,7 +1,7 @@
-# Random Number Factory - Tree View Web Application
+# Tree View Web Application
 
 ## Overview
-Random Number Factory is a real-time interactive web application that allows users to create, manage, and visualize a tree structure of "factories" that generate random numbers. The application features a responsive UI with a main tree view showing factories and their randomly generated child nodes.
+The Tree View Web Application is a real-time interactive web application that allows users to create, manage, and visualize a tree structure of "factories" that generate random numbers. The application features a responsive UI with a main tree view showing factories and their randomly generated child nodes.
 
 ## Features
 
