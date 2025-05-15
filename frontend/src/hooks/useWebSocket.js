@@ -51,8 +51,18 @@ const useWebSocket = (
         try {
           // Parse JSON data from the server
           const data = JSON.parse(event.data);
+          console.log('WebSocket message received:', data);
+          
           // Call the provided message handler with the parsed data
           onMessage(data);
+          
+          // Handle ping/pong for connection health check
+          if (data.action === 'ping') {
+            socket.send(JSON.stringify({
+              action: 'pong',
+              timestamp: Date.now()
+            }));
+          }
         } catch (err) {
           console.error('Error parsing WebSocket message:', err);
           setError('Failed to parse message from server');
