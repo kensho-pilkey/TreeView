@@ -31,64 +31,65 @@ const useWebSocket = (
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
-    
-    try {
-      setConnectionStatus('CONNECTING');
-      
-      // Create new WebSocket connection
-      const socket = new WebSocket(url);
-      socketRef.current = socket;
-      
-      // Connection opened handler
-      socket.onopen = () => {
-        setConnectionStatus('OPEN');
-        setError(null);
-        reconnectAttemptsRef.current = 0; // Reset reconnect attempts on successful connection
-      };
-      
-      // Message received handler
-      socket.onmessage = (event) => {
-        try {
-          // Parse JSON data from the server
-          const data = JSON.parse(event.data);
-          console.log('WebSocket message received:', data);
-          
-          // Call the provided message handler with the parsed data
-          onMessage(data);
-          
-          // Handle ping/pong for connection health check
-          if (data.action === 'ping') {
-            socket.send(JSON.stringify({
-              action: 'pong',
-              timestamp: Date.now()
-            }));
-          }
-        } catch (err) {
-          console.error('Error parsing WebSocket message:', err);
-          setError('Failed to parse message from server');
-        }
-      };
-      
-      // Connection closed handler
-      socket.onclose = (event) => {
-        setConnectionStatus('CLOSED');
+    setTimeout(() => {
+      try {
+        setConnectionStatus('CONNECTING');
         
-        // Don't attempt to reconnect if socket was closed intentionally
-        if (!event.wasClean && reconnectAttemptsRef.current < maxReconnectAttempts) {
-          attemptReconnect();
-        }
-      };
-      
-      // Error handler
-      socket.onerror = (err) => {
-        console.error('WebSocket error:', err);
-        setError('WebSocket connection error');
-      };
-    } catch (err) {
-      console.error('Failed to create WebSocket connection:', err);
-      setError('Failed to create WebSocket connection');
-      attemptReconnect();
-    }
+        // Create new WebSocket connection
+        const socket = new WebSocket(url);
+        socketRef.current = socket;
+        
+        // Connection opened handler
+        socket.onopen = () => {
+          setConnectionStatus('OPEN');
+          setError(null);
+          reconnectAttemptsRef.current = 0; // Reset reconnect attempts on successful connection
+        };
+        
+        // Message received handler
+        socket.onmessage = (event) => {
+          try {
+            // Parse JSON data from the server
+            const data = JSON.parse(event.data);
+            console.log('WebSocket message received:', data);
+            
+            // Call the provided message handler with the parsed data
+            onMessage(data);
+            
+            // Handle ping/pong for connection health check
+            if (data.action === 'ping') {
+              socket.send(JSON.stringify({
+                action: 'pong',
+                timestamp: Date.now()
+              }));
+            }
+          } catch (err) {
+            console.error('Error parsing WebSocket message:', err);
+            setError('Failed to parse message from server');
+          }
+        };
+        
+        // Connection closed handler
+        socket.onclose = (event) => {
+          setConnectionStatus('CLOSED');
+          
+          // Don't attempt to reconnect if socket was closed intentionally
+          if (!event.wasClean && reconnectAttemptsRef.current < maxReconnectAttempts) {
+            attemptReconnect();
+          }
+        };
+        
+        // Error handler
+        socket.onerror = (err) => {
+          console.error('WebSocket error:', err);
+          setError('WebSocket connection error');
+        };
+      } catch (err) {
+        console.error('Failed to create WebSocket connection:', err);
+        setError('Failed to create WebSocket connection');
+        attemptReconnect();
+      }
+    }, 500);
   }, [url, onMessage, maxReconnectAttempts]);
   
   // Attempt to reconnect with exponential backoff
