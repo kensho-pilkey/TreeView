@@ -107,20 +107,6 @@ const TreeView = () => {
     return positions;
   }, [uniqueFactories]);
   
-  // Render error notification if there's an error
-  const renderError = () => {
-    if (!error) return null;
-    
-    return (
-      <div className="error-notification">
-        <div className="error-content">
-          <div className="error-message">{error}</div>
-          <button className="error-close" onClick={clearError}>×</button>
-        </div>
-      </div>
-    );
-  };
-  
   return (
     <div className="tree-view">
       {/* Connection status indicator */}
@@ -144,9 +130,6 @@ const TreeView = () => {
           <Loader size={32} className="spinner" />
         </div>
       )}
-      
-      {/* Error notification */}
-      {renderError()}
       
       <div className={`tree-visualization ${getZoomClass()}`}>
         <div className="root-node-container">
