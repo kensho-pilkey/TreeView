@@ -5,7 +5,7 @@ from sqlalchemy.future import select
 import os
 from dotenv import load_dotenv
 
-from app.db.database import init_db, close_db, AsyncSession, get_db
+from app.db.database import init_db, close_db, AsyncSession, get_db, async_session_factory
 from app.db.models.tree import Tree
 from app.api.routes import trees, websockets
 
@@ -23,7 +23,7 @@ FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=FRONTEND_URL,
+    allow_origins=[FRONTEND_URL],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -32,7 +32,7 @@ app.add_middleware(
 # Function to create default tree if none exists
 async def create_default_tree():
     try:
-        async with AsyncSession() as db:
+        async with async_session_factory() as db:  # Change AsyncSession() to async_session_factory()
             # Check if any tree exists
             stmt = select(Tree)
             result = await db.execute(stmt)
@@ -43,13 +43,16 @@ async def create_default_tree():
                 default_tree = Tree(name="Default Tree")
                 db.add(default_tree)
                 await db.commit()
-                print("Created default tree with name 'Default Tree'")
+                await db.refresh(default_tree)  # Add this to get the ID
+                print(f"Created default tree with name 'Default Tree', ID: {default_tree.id}")
                 return default_tree.id
             else:
                 print(f"Using existing tree: {existing_tree.id}")
                 return existing_tree.id
     except Exception as e:
+        import traceback
         print(f"Error creating default tree: {str(e)}")
+        print(traceback.format_exc())  # Print full stack trace for debugging
         return None
 
 # Database startup and shutdown events
