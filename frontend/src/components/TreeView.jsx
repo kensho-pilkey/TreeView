@@ -20,6 +20,7 @@ const TreeView = () => {
   
   const [editingFactory, setEditingFactory] = useState(null);
   const [showFactoryForm, setShowFactoryForm] = useState(false);
+  const [isRootHovered, setIsRootHovered] = useState(false);
   
   const handleAddFactory = () => {
     setEditingFactory(null);
@@ -133,10 +134,14 @@ const TreeView = () => {
       
       <div className={`tree-visualization ${getZoomClass()}`}>
         <div className="root-node-container">
-          <div className="root-node">
+          <div 
+            className="root-node"
+            onMouseEnter={() => setIsRootHovered(true)}
+            onMouseLeave={() => setIsRootHovered(false)}
+          >
             <span>Root</span>
             <button 
-              className="add-factory-btn" 
+              className={`add-factory-btn ${isRootHovered ? 'visible' : ''}`}
               onClick={handleAddFactory}
               title="Add Factory"
             >

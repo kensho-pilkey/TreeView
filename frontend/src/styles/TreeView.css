@@ -62,6 +62,7 @@
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
 }
 
+/* Add factory button styling */
 .add-factory-btn {
   position: absolute;
   bottom: -10px;
@@ -78,7 +79,19 @@
   cursor: pointer;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   z-index: 20;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  
+  /* Default state - hidden */
+  opacity: 0;
+  transform: scale(0.8);
+  pointer-events: none; /* Prevents clicking when invisible */
+}
+
+/* Visible state when parent is hovered */
+.root-node:hover .add-factory-btn {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto; /* Enables clicking when visible */
 }
 
 .add-factory-btn:hover {
