@@ -76,9 +76,16 @@ const treeReducer = (state, action) => {
         ...state,
         tree: {
           ...state.tree,
-          factories: state.tree.factories.map(factory => 
-            factory.id === action.payload.id ? action.payload : factory
-          )
+          factories: state.tree.factories.map(factory => {
+            if (factory.id === action.payload.id) {
+              // Preserve the existing children when updating a factory
+              return {
+                ...action.payload,
+                children: factory.children || [] // Keep existing children
+              };
+            }
+            return factory;
+          })
         },
         loading: false
       };
@@ -144,14 +151,21 @@ const treeReducer = (state, action) => {
       );
       
       if (factoryExists) {
-        // Update existing factory
+        // Update existing factory while preserving children if they're not in the payload
         return {
           ...state,
           tree: {
             ...state.tree,
-            factories: state.tree.factories.map(factory => 
-              factory.id === action.payload.id ? action.payload : factory
-            )
+            factories: state.tree.factories.map(factory => {
+              if (factory.id === action.payload.id) {
+                // If the payload has children, use them, otherwise keep existing children
+                return {
+                  ...action.payload,
+                  children: action.payload.children || factory.children || []
+                };
+              }
+              return factory;
+            })
           }
         };
       } else {
@@ -221,14 +235,22 @@ export const TreeProvider = ({ children }) => {
         break;
         
       case 'factory_updated':
-        // Map backend data to our frontend structure
+        // Find existing factory to preserve its children
+        const existingFactory = state.tree.factories.find(
+          factory => factory.id === data.data.id
+        );
+
+        // Map backend data to our frontend structure while preserving children
         const updatedFactory = {
           id: data.data.id,
           name: data.data.name,
           lowerBound: data.data.lower_bound,
           upperBound: data.data.upper_bound,
-          childCount: data.data.child_count
+          childCount: data.data.child_count,
+          // Preserve existing children
+          children: existingFactory ? existingFactory.children : []
         };
+        
         dispatch({ type: actionTypes.SOCKET_UPDATE_FACTORY, payload: updatedFactory });
         break;
         
@@ -342,11 +364,26 @@ export const TreeProvider = ({ children }) => {
     dispatch({ type: actionTypes.UPDATE_FACTORY_START });
     
     try {
+      // Find the existing factory to preserve its children
+      const existingFactory = state.tree.factories.find(
+        factory => factory.id === factoryId
+      );
+      
       const response = await treeApi.updateFactory(factoryId, factoryData);
       
       if (response.success) {
-        dispatch({ type: actionTypes.UPDATE_FACTORY_SUCCESS, payload: response.data });
-        return { success: true, factory: response.data };
+        // Preserve children from the existing factory in the updated factory data
+        const updatedFactoryWithChildren = {
+          ...response.data,
+          children: existingFactory ? existingFactory.children : []
+        };
+        
+        dispatch({ 
+          type: actionTypes.UPDATE_FACTORY_SUCCESS, 
+          payload: updatedFactoryWithChildren
+        });
+        
+        return { success: true, factory: updatedFactoryWithChildren };
       } else {
         dispatch({ type: actionTypes.UPDATE_FACTORY_ERROR, payload: response.message });
         return { success: false, error: response.message };
