@@ -23,6 +23,7 @@ const useWebSocket = (
   const socketRef = useRef(null);
   const reconnectAttemptsRef = useRef(0);
   const reconnectTimeoutRef = useRef(null);
+  const isFirstConnectRef = useRef(true);
   
   // Memoized connection handler to prevent unnecessary effect triggers
   const connect = useCallback(() => {
@@ -31,70 +32,74 @@ const useWebSocket = (
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
-    setTimeout(() => {
-      try {
-        setConnectionStatus('CONNECTING');
-        
-        // Create new WebSocket connection
-        const socket = new WebSocket(url);
-        socketRef.current = socket;
-        
-        // Connection opened handler
-        socket.onopen = () => {
-          setConnectionStatus('OPEN');
-          setError(null);
-          reconnectAttemptsRef.current = 0; // Reset reconnect attempts on successful connection
-        };
-        
-        // Message received handler
-        socket.onmessage = (event) => {
-          try {
-            // Parse JSON data from the server
-            const data = JSON.parse(event.data);
-            console.log('WebSocket message received:', data);
-            
-            // Call the provided message handler with the parsed data
-            onMessage(data);
-            
-            // Handle ping/pong for connection health check
-            if (data.action === 'ping') {
-              socket.send(JSON.stringify({
-                action: 'pong',
-                timestamp: Date.now()
-              }));
-            }
-          } catch (err) {
-            console.error('Error parsing WebSocket message:', err);
-            setError('Failed to parse message from server');
-          }
-        };
-        
-        // Connection closed handler
-        socket.onclose = (event) => {
-          setConnectionStatus('CLOSED');
+    if (isFirstConnectRef.current) {
+      setConnectionStatus('CONNECTING');
+      isFirstConnectRef.current = false;
+    }
+    
+    try {
+      // Create new WebSocket connection
+      const socket = new WebSocket(url);
+      socketRef.current = socket;
+      
+      // Connection opened handler
+      socket.onopen = () => {
+        setConnectionStatus('OPEN');
+        setError(null);
+        reconnectAttemptsRef.current = 0; // Reset reconnect attempts on successful connection
+      };
+      
+      // Message received handler
+      socket.onmessage = (event) => {
+        try {
+          // Parse JSON data from the server
+          const data = JSON.parse(event.data);
           
-          // Don't attempt to reconnect if socket was closed intentionally
-          if (!event.wasClean && reconnectAttemptsRef.current < maxReconnectAttempts) {
-            attemptReconnect();
+          // Call the provided message handler with the parsed data
+          onMessage(data);
+          
+          // Handle ping/pong for connection health check
+          if (data.action === 'ping') {
+            socket.send(JSON.stringify({
+              action: 'pong',
+              timestamp: Date.now()
+            }));
           }
-        };
+        } catch (err) {
+          console.error('Error parsing WebSocket message:', err);
+          setError('Failed to parse message from server');
+        }
+      };
+      
+      // Connection closed handler
+      socket.onclose = (event) => {
+        if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
+          setConnectionStatus('CLOSED');
+        }
         
-        // Error handler
-        socket.onerror = (err) => {
-          console.error('WebSocket error:', err);
-          setError('WebSocket connection error');
-        };
-      } catch (err) {
-        console.error('Failed to create WebSocket connection:', err);
-        setError('Failed to create WebSocket connection');
-        attemptReconnect();
-      }
-    }, 500);
+        // Don't attempt to reconnect if socket was closed intentionally
+        if (!event.wasClean && reconnectAttemptsRef.current < maxReconnectAttempts) {
+          attemptReconnect();
+        }
+      };
+      
+      // Error handler
+      socket.onerror = (err) => {
+        console.error('WebSocket error:', err);
+        setError('WebSocket connection error');
+      };
+    } catch (err) {
+      console.error('Failed to create WebSocket connection:', err);
+      setError('Failed to create WebSocket connection');
+      attemptReconnect();
+    }
   }, [url, onMessage, maxReconnectAttempts]);
   
   // Attempt to reconnect with exponential backoff
   const attemptReconnect = useCallback(() => {
-    setConnectionStatus('RECONNECTING');
+    if (reconnectAttemptsRef.current > 1) {
+      setConnectionStatus('RECONNECTING');
+    }
     
     const attempts = reconnectAttemptsRef.current + 1;
     reconnectAttemptsRef.current = attempts;
@@ -144,6 +149,26 @@ const useWebSocket = (
       disconnect();
     };
   }, [connect, disconnect]);
+
+  // Add a heartbeat to maintain connection status
+  useEffect(() => {
+    const heartbeatInterval = setInterval(() => {
+      // Check if socket exists and is open
+      if (socketRef.current?.readyState === WebSocket.OPEN) {
+        try {
+          // Send a ping to keep the connection alive
+          socketRef.current.send(JSON.stringify({
+            action: 'ping',
+            timestamp: Date.now()
+          }));
+        } catch (err) {
+          console.error('Error sending heartbeat:', err);
+        }
+      }
+    }, 30000); // 30 second heartbeat
+    
+    return () => clearInterval(heartbeatInterval);
+  }, []);
   
   return {
     connectionStatus,
