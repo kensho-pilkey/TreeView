@@ -8,7 +8,22 @@ from typing import AsyncGenerator
 
 load_dotenv()
 
+# Get the DATABASE_URL from environment variable
 DATABASE_URL = os.getenv("DATABASE_URL")
+
+# Make sure we're using the asyncpg driver
+if DATABASE_URL:
+    # Replace postgres:// with postgresql+asyncpg://
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+    # Replace postgresql:// with postgresql+asyncpg://
+    elif DATABASE_URL.startswith("postgresql://"):
+        DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+    print(f"Using database URL: {DATABASE_URL}")
+else:
+    # Fallback for local development
+    DATABASE_URL = "postgresql+asyncpg://postgres:password@localhost:5432/treeview"
+    print(f"No DATABASE_URL found in environment, using default: {DATABASE_URL}")
 
 engine = create_async_engine(
     DATABASE_URL,
