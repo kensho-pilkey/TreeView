@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.future import select
+import os
+from dotenv import load_dotenv
 
 from app.db.database import init_db, close_db, AsyncSession, get_db
 from app.db.models.tree import Tree
@@ -14,16 +16,14 @@ app = FastAPI(
     version="0.1.0"
 )
 
+load_dotenv()
+
 # Configure CORS
-origins = [
-    "http://localhost:5173",  # Vite dev server
-    "http://localhost:3000",  # Alternative frontend port
-    "http://localhost:8080",  # Another common frontend port
-]
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=FRONTEND_URL,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
