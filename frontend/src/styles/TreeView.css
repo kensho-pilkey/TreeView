@@ -1,14 +1,13 @@
 .tree-view {
   width: 100%;
   height: 100%;
-  min-height: 80vh;
+  min-height: 100vh;
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* Main visualization container */
 .tree-visualization {
   width: 100%;
   height: 100%;
@@ -16,6 +15,20 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  transition: transform 0.5s ease;
+}
+
+/* Zoom out classes for different levels of zoom */
+.tree-visualization.zoomed-out {
+  transform: scale(0.85);
+}
+
+.tree-visualization.zoomed-out-more {
+  transform: scale(0.7);
+}
+
+.tree-visualization.zoomed-out-max {
+  transform: scale(0.55);
 }
 
 /* Root node styling */
@@ -30,7 +43,7 @@
 .root-node {
   width: 100px;
   height: 100px;
-  background-color: #6366f1; /* Indigo color */
+  background-color: #6366f1;
   border-radius: 50%;
   display: flex;
   flex-direction: column;
@@ -55,7 +68,7 @@
   right: -10px;
   width: 36px;
   height: 36px;
-  background-color: #22c55e; /* Green color */
+  background-color: #22c55e;
   border: none;
   border-radius: 50%;
   display: flex;
@@ -70,10 +83,9 @@
 
 .add-factory-btn:hover {
   transform: scale(1.1);
-  background-color: #16a34a; /* Darker green on hover */
+  background-color: #16a34a;
 }
 
-/* Factories container */
 .factories-container {
   position: absolute;
   width: 100%;
@@ -82,26 +94,102 @@
   left: 0;
 }
 
-/* Factory branch */
 .factory-branch {
   position: absolute;
   top: 50%;
   left: 50%;
-  /* transform is set dynamically in JSX */
 }
 
-/* Connector line from root to factory */
 .connector-root-to-factory {
   position: absolute;
   height: 2px;
-  background-color: #94a3b8; /* Slate color */
+  background-color: #94a3b8;
   transform-origin: left center;
   z-index: 1;
 }
 
-/* Factory node styles will be imported from FactoryNode.css */
+.connection-status {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  z-index: 100;
+  transition: all 0.3s ease;
+}
 
-/* Factory Form Modal */
+.connection-status.connected {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.connection-status.disconnected {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+/* Loading overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #fee2e2;
+  border-left: 4px solid #dc2626;
+  border-radius: 4px;
+  padding: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  max-width: 90%;
+  width: 400px;
+}
+
+.error-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.error-message {
+  color: #b91c1c;
+  font-size: 14px;
+  margin-right: 10px;
+}
+
+.error-close {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 20px;
+  cursor: pointer;
+}
+
 .factory-form-overlay {
   position: fixed;
   top: 0;
@@ -126,7 +214,7 @@
 
 .factory-form h3 {
   margin-top: 0;
-  color: #1e293b; /* Slate 800 */
+  color: #1e293b;
   margin-bottom: 16px;
 }
 
@@ -137,9 +225,6 @@
     height: 80px;
     font-size: 14px;
   }
-  
-  /* Factories should be closer to the root on small screens */
-  /* This will be handled in the calculateFactoryPositions function in the component */
 }
 
 /* Animation for new factories */

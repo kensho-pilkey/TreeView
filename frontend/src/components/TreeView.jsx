@@ -63,8 +63,20 @@ const TreeView = () => {
     // Convert back to array
     return Array.from(factoryMap.values());
   }, [tree.factories]);
+
+  // Get the appropriate zoom class based on number of factories
+  const getZoomClass = () => {
+    const count = uniqueFactories.length;
+    if (count <= 4) return '';
+    if (count <= 7) return 'zoomed-out';
+    if (count <= 11) return 'zoomed-out-more';
+    return 'zoomed-out-max';
+  };
+
+  // Get the zoom level as a string to pass to child components
+  const zoomLevel = getZoomClass();
   
-  // Calculate positions based on unique factories
+  // Calculate positions based on unique factories with dynamic radius
   const factoryPositions = useMemo(() => {
     const totalFactories = uniqueFactories.length;
     if (totalFactories === 0) return [];
@@ -74,7 +86,15 @@ const TreeView = () => {
       a.id.localeCompare(b.id)
     );
     
-    const radius = 250;
+    // Base radius for 1-4 factories
+    let baseRadius = 250;
+    
+    // Scale radius up as more factories are added beyond 4
+    // This creates the "spread out" effect
+    const radius = totalFactories <= 4 
+      ? baseRadius 
+      : baseRadius * (1 + (totalFactories - 4) * 0.15); // Increase by 15% for each factory beyond 4
+    
     const positions = [];
     
     for (let i = 0; i < sortedFactories.length; i++) {
@@ -128,7 +148,7 @@ const TreeView = () => {
       {/* Error notification */}
       {renderError()}
       
-      <div className="tree-visualization">
+      <div className={`tree-visualization ${getZoomClass()}`}>
         <div className="root-node-container">
           <div className="root-node">
             <span>Root</span>
@@ -169,6 +189,7 @@ const TreeView = () => {
                   
                   <FactoryNode 
                     factory={factory}
+                    zoomLevel={zoomLevel}
                     onEdit={() => handleEditFactory(factory)}
                     onDelete={() => handleDeleteFactory(factory.id)}
                     onGenerateChildren={() => handleGenerateChildren(factory.id)}

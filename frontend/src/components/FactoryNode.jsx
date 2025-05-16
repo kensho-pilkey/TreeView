@@ -10,11 +10,15 @@ import { Edit, X, Play } from 'lucide-react';
  * @param {Function} onDelete - Callback for delete action
  * @param {Function} onGenerateChildren - Callback for generating children
  */
-const FactoryNode = ({ factory, onEdit, onDelete, onGenerateChildren }) => {
+const FactoryNode = ({ factory, zoomLevel, onEdit, onDelete, onGenerateChildren }) => {
   const [isHovered, setIsHovered] = useState(false);
   
-  // Child node distance from factory center
-  const radius = 140; 
+  // distance from factory center
+  let radius = 140; 
+
+  if (zoomLevel === 'zoomed-out') radius = 130;
+  if (zoomLevel === 'zoomed-out-more') radius = 120;  
+  if (zoomLevel === 'zoomed-out-max') radius = 110;
   
   return (
     <div className="factory-node-wrapper">
