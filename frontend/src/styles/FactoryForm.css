@@ -60,6 +60,11 @@ form {
   margin-bottom: 16px;
 }
 
+#name, #childCount, #upperBound, #lowerBound{
+  background-color: white;
+  color: black;
+}
+
 .form-row {
   display: flex;
   gap: 16px;

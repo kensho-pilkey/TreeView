@@ -63,19 +63,19 @@
 }
 
 .edit-btn {
-  background-color: #0ea5e9;
+  background-color: #3b82f6;
 }
 
 .edit-btn:hover {
-  background-color: #0284c7;
+  background-color: #2563eb;
 }
 
 .generate-btn {
-  background-color: #0c4a6e;
+  background-color: #22c55e;
 }
 
 .generate-btn:hover {
-  background-color: #075985;
+  background-color: #16a34a;
 }
 
 .delete-btn {
