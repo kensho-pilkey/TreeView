@@ -14,8 +14,6 @@ This documentation describes the LiveTree web application - a real-time interact
   - [API Endpoints](#api-endpoints)
   - [Database Schema](#database-schema)
   - [WebSocket Server](#websocket-server)
-- [Deployment](#deployment)
-- [Getting Started for Developers](#getting-started-for-developers)
 
 ## Overview
 
@@ -102,12 +100,10 @@ The FactoryNode component renders an individual factory with its properties and 
 - `onGenerateChildren`: Callback for generating children
 
 The FactoryNode component is visually represented as:
-- A central orange rectangular node displaying factory name and range
-- Purple circular child nodes arranged in a circle around the factory
+- A rectangular node displaying factory name, range, and child count
+- Smaller circular child nodes arranged evenly around the factory
 - Connecting lines between the factory and each child
 - Control buttons (edit, generate, delete) that appear on hover
-
-For details, see the [FactoryNode Component Documentation](./components/FactoryNode.md).
 
 #### FactoryForm Component
 
@@ -191,12 +187,11 @@ const connectWebSocket = () => {
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/factories` | Get all factories |
-| GET | `/api/factories/{id}` | Get a factory by ID |
+| GET | `/api/tree` | Get entire tree |
 | POST | `/api/factories` | Create a new factory |
-| PUT | `/api/factories/{id}` | Update a factory |
-| DELETE | `/api/factories/{id}` | Delete a factory |
-| POST | `/api/factories/{id}/generate` | Generate children for a factory |
+| PUT | `/api/factories/{factory_id}` | Update a factory |
+| DELETE | `/api/factories/{factory_id}` | Delete a factory |
+| POST | `/api/factories/{factory_id}/generate` | Generate children for a factory |
 
 ### Database Schema
 
@@ -253,76 +248,4 @@ async def websocket_endpoint(websocket: WebSocket):
         websocket_manager.disconnect(websocket)
 ```
 
-## Deployment
 
-The application is deployed on Render.com with the following configuration:
-
-### Web Service
-
-- **Name**: LiveTree Web Service
-- **Build Command**: `cd frontend && npm install && npm run build && cd ../backend && pip install -r requirements.txt`
-- **Start Command**: `cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT`
-
-### Database
-
-- PostgreSQL database hosted on Render
-- Connection configured through environment variables
-
-### Environment Variables
-
-- `DATABASE_URL`: PostgreSQL connection string
-- `SECRET_KEY`: Secret key for security
-- `FRONTEND_URL`: URL for CORS configuration
-
-## Getting Started for Developers
-
-### Prerequisites
-
-- Python 3.8+
-- Node.js 16+
-- PostgreSQL
-
-### Local Development Setup
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/kensho-pilkey/TreeView.git
-   cd TreeView
-   ```
-
-2. Set up the backend:
-   ```bash
-   cd backend
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
-
-3. Configure environment variables:
-   Create a `.env` file in the backend directory with:
-   ```
-   DATABASE_URL=postgresql://username:password@localhost:5432/livetree
-   SECRET_KEY=your_secret_key
-   ```
-
-4. Set up the frontend:
-   ```bash
-   cd ../frontend
-   npm install
-   ```
-
-5. Start the development servers:
-   
-   Backend:
-   ```bash
-   cd ../backend
-   python run.py
-   ```
-   
-   Frontend:
-   ```bash
-   cd ../frontend
-   npm run dev
-   ```
-
-6. Access the application at `http://localhost:5173`
