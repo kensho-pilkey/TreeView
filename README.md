@@ -33,3 +33,76 @@ The Live Tree Web Application is a real-time interactive web application that al
 ### Deployment
 - Render for cloud hosting and deployment
 - PostgreSQL hosted on Render
+
+## How to Use
+
+1. **Create a Factory**: Click the "Add Factory" button and provide a name, lower bound, and upper bound
+2. **Generate Numbers**: Select a factory and click the generate button (play icon) to create random number nodes
+3. **Edit Factory**: Click the edit button (pencil icon) to modify a factory's name and number range
+4. **Delete Factory**: Remove a factory and all its children with the delete button (X icon)
+
+## Local Development Setup
+
+### Prerequisites
+- Python 3.8+
+- Node.js 16+
+- PostgreSQL
+
+### Frontend Setup
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+### Backend Setup
+```bash
+# Navigate to backend directory
+cd backend
+
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Set up environment variables
+# Create a .env file with PostgreSQL connection details
+
+# Start development server
+python run.py
+```
+
+## Project Structure
+
+```
+livetree/
+├── frontend/                 # React frontend
+│   ├── public/
+│   ├── src/
+│   │   ├── components/       # UI components
+│   │   │   ├── FactoryForm.jsx
+│   │   │   ├── FactoryNode.jsx
+│   │   │   └── TreeView.jsx
+│   │   ├── hooks/            # Custom React hooks
+│   │   ├── services/         # API services
+│   │   ├── styles/           # CSS files
+│   │   └── App.jsx           # Main application component
+│   └── package.json
+├── backend/                  # FastAPI backend
+│   ├── app/
+│   │   ├── api/              # API endpoints
+│   │   ├── core/             # Core functionality
+│   │   ├── db/               # Database models and config
+│   │   ├── schemas/          # Pydantic schemas
+│   │   └── websockets/       # WebSocket implementation
+│   ├── main.py               # Entry point
+│   └── requirements.txt
+└── README.md
+```
