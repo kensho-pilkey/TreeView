@@ -47,7 +47,7 @@ async def create_default_tree():
     except Exception as e:
         import traceback
         print(f"Error creating default tree: {str(e)}")
-        print(traceback.format_exc())  # Print full stack trace for debugging
+        print(traceback.format_exc())
         return None
 
 @app.on_event("startup")
