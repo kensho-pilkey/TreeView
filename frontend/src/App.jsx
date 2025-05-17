@@ -17,7 +17,7 @@ function App() {
       </main>
       
       <footer className="app-footer">
-        <p>Tree View Application | Real-time Tree View</p>
+        <p>Tree View Application | © 2025 Kensho Pilkey | Created as a programming challenge demonstration</p>
       </footer>
     </div>
   );
