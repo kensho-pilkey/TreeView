@@ -195,6 +195,23 @@ const connectWebSocket = () => {
 
 ### Database Schema
 
+The LiveTree application uses a three-tier hierarchical structure with Tree, Factory, and Child models.
+
+#### Tree Model
+
+```python
+class Tree(Base):
+    __tablename__ = "trees"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String, nullable=False, default="Root")
+    
+    # Relationship with factories
+    factories = relationship("Factory", back_populates="tree", cascade="all, delete-orphan")
+```
+
+The Tree model serves as the top-level container for factories. Each application instance has exactly one tree, which serves as the root of the visualization hierarchy.
+
 #### Factory Model
 
 ```python
@@ -203,32 +220,48 @@ class Factory(Base):
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String, nullable=False)
-    lower_bound = Column(Integer, nullable=False)
-    upper_bound = Column(Integer, nullable=False)
-    child_count = Column(Integer, default=0)
+    lower_bound = Column(Integer, nullable=False, default=1)
+    upper_bound = Column(Integer, nullable=False, default=100)
+    child_count = Column(Integer, nullable=False, default=5)
     
-    # Relationship with FactoryChild
-    children = relationship("FactoryChild", back_populates="factory", cascade="all, delete-orphan")
+    # Foreign key to Tree
+    tree_id = Column(UUID(as_uuid=True), ForeignKey("trees.id", ondelete="CASCADE"), nullable=False)
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    # Relationship with Tree
+    tree = relationship("Tree", back_populates="factories")
+    
+    # Relationship with Children
+    children = relationship("Child", back_populates="factory", cascade="all, delete-orphan")
 ```
 
-#### FactoryChild Model
+The Factory model represents the factory nodes displayed in the tree view. Each factory belongs to a specific tree and can generate random number children. Key properties include:
+- Customizable name
+- Lower and upper bounds for random number generation
+- Child count setting (with a default of 5)
+- Cascade delete relationship with its children (when a factory is deleted, all its children are also deleted)
+
+#### Child Model
 
 ```python
-class FactoryChild(Base):
-    __tablename__ = "factory_children"
+class Child(Base):
+    __tablename__ = "children"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    factory_id = Column(UUID(as_uuid=True), ForeignKey("factories.id"), nullable=False)
     value = Column(Integer, nullable=False)
+    
+    # Foreign key to Factory
+    factory_id = Column(UUID(as_uuid=True), ForeignKey("factories.id", ondelete="CASCADE"), nullable=False)
     
     # Relationship with Factory
     factory = relationship("Factory", back_populates="children")
-    
-    created_at = Column(DateTime, default=datetime.utcnow)
 ```
+
+The Child model represents the randomly generated number nodes that are created by a factory. Each child:
+- Has a numeric value generated within the factory's bounds
+- Belongs to exactly one factory
+- Is automatically deleted when its parent factory is removed (CASCADE delete)
+
+This three-tier structure allows for a flexible hierarchy where multiple factories can exist under a single tree, and each factory can generate its own set of child nodes with random values.
 
 ### WebSocket Server
 
