@@ -20,7 +20,6 @@ The Live Tree Web Application is a real-time interactive web application that al
 
 ### Frontend
 - React.js with Vite for fast development
-- Tailwind CSS for styling
 - WebSocket for real-time communication
 - Lucide icons for UI elements
 
