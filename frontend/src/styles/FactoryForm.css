@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(12, 74, 110, 0.25);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -16,7 +16,7 @@
   border-radius: 8px;
   width: 400px;
   max-width: 90vw;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 16px rgba(12, 74, 110, 0.15);
   animation: formAppear 0.3s ease;
 }
 
@@ -30,7 +30,7 @@
 
 .form-header h3 {
   margin: 0;
-  color: #1e293b;
+  color: #0c4a6e;
   font-size: 18px;
 }
 
@@ -49,7 +49,7 @@
 
 .close-btn:hover {
   background-color: #f1f5f9;
-  color: #0f172a;
+  color: #0c4a6e;
 }
 
 form {
@@ -60,20 +60,28 @@ form {
   margin-bottom: 16px;
 }
 
-#name, #childCount, #upperBound, #lowerBound{
+#name, #childCount, #upperBound, #lowerBound {
   background-color: white;
-  color: black;
+  color: #333333;
 }
 
 .form-row {
   display: flex;
   gap: 16px;
   margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
 .form-row .form-group {
   flex: 1;
+  min-width: calc(50% - 8px); 
   margin-bottom: 0;
+}
+
+@media (max-width: 400px) {
+  .form-row .form-group {
+    min-width: 100%;
+  }
 }
 
 label {
@@ -91,12 +99,13 @@ input {
   border-radius: 4px;
   font-size: 14px;
   transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 input:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(3, 105, 161, 0.1);
 }
 
 input.error {
@@ -104,7 +113,7 @@ input.error {
 }
 
 input.error:focus {
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
 }
 
 .error-message {
@@ -145,7 +154,7 @@ input.error:focus {
 
 .save-button {
   padding: 8px 16px;
-  background-color: #3b82f6;
+  background-color: #0369a1;
   color: white;
   border: none;
   border-radius: 4px;
@@ -156,7 +165,7 @@ input.error:focus {
 }
 
 .save-button:hover {
-  background-color: #2563eb;
+  background-color: #0ea5e9;
 }
 
 @keyframes formAppear {
