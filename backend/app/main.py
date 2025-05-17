@@ -9,17 +9,15 @@ from app.db.database import init_db, close_db, AsyncSession, get_db, async_sessi
 from app.db.models.tree import Tree
 from app.api.routes import trees, websockets
 
-# Create FastAPI app
 app = FastAPI(
-    title="Tree Visualization API",
+    title="LiveTree API",
     description="Backend API for Tree Visualization Project",
-    version="0.1.0"
+    version="1.0.0"
 )
 
 load_dotenv()
 
-# Configure CORS
-FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+FRONTEND_URL = os.environ.get("FRONTEND_URL")
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,18 +29,16 @@ app.add_middleware(
 
 async def create_default_tree():
     try:
-        async with async_session_factory() as db:  # Change AsyncSession() to async_session_factory()
-            # Check if any tree exists
+        async with async_session_factory() as db:
             stmt = select(Tree)
             result = await db.execute(stmt)
             existing_tree = result.scalars().first()
             
             if not existing_tree:
-                # Create the default tree
                 default_tree = Tree(name="Default Tree")
                 db.add(default_tree)
                 await db.commit()
-                await db.refresh(default_tree)  # Add this to get the ID
+                await db.refresh(default_tree)
                 print(f"Created default tree with name 'Default Tree', ID: {default_tree.id}")
                 return default_tree.id
             else:
@@ -54,11 +50,9 @@ async def create_default_tree():
         print(traceback.format_exc())  # Print full stack trace for debugging
         return None
 
-# Database startup and shutdown events
 @app.on_event("startup")
 async def startup_db_client():
     await init_db()
-    # Create default tree after DB initialization
     default_tree_id = await create_default_tree()
     if default_tree_id:
         app.state.default_tree_id = default_tree_id
@@ -70,7 +64,6 @@ async def startup_db_client():
 async def shutdown_db_client():
     await close_db()
 
-# Include routers
 app.include_router(trees.router, prefix="/api", tags=["trees"])
 app.include_router(websockets.router, tags=["websockets"])
 
