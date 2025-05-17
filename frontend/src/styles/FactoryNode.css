@@ -11,20 +11,20 @@
   position: absolute;
   width: 100px;
   height: 70px;
-  background-color: #f97316;
+  background-color: #0369a1;
   border-radius: 4px;
   display: flex;
   flex-direction: column;
   padding: 8px;
   color: white;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(3, 105, 161, 0.2);
   transition: all 0.3s ease;
   z-index: 5;
   transform: translate(-50%, -50%);
 }
 
 .factory-node:hover {
-  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 10px rgba(3, 105, 161, 0.3);
 }
 
 .factory-header {
@@ -63,19 +63,19 @@
 }
 
 .edit-btn {
-  background-color: #3b82f6;
+  background-color: #0ea5e9;
 }
 
 .edit-btn:hover {
-  background-color: #2563eb;
+  background-color: #0284c7;
 }
 
 .generate-btn {
-  background-color: #22c55e;
+  background-color: #0c4a6e;
 }
 
 .generate-btn:hover {
-  background-color: #16a34a;
+  background-color: #075985;
 }
 
 .delete-btn {
@@ -111,7 +111,7 @@
 .connector-line {
   position: absolute;
   height: 1px;
-  background-color: #cbd5e1;
+  background-color: #94a3b8;
   transform-origin: left center;
   pointer-events: none;
 }
@@ -120,7 +120,7 @@
   position: absolute;
   width: 36px;
   height: 36px;
-  background-color: #a855f7;
+  background-color: #38bdf8;
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -128,7 +128,7 @@
   color: white;
   font-size: 12px;
   font-weight: bold;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 4px rgba(14, 165, 233, 0.2);
   transform: translate(-50%, -50%);
   z-index: 3;
   transition: all 0.3s ease;
@@ -137,7 +137,7 @@
 
 .child-node:hover {
   transform: translate(-50%, -50%) scale(1.2);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 6px rgba(14, 165, 233, 0.3);
   z-index: 4;
 }
 

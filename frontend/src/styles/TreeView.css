@@ -41,7 +41,7 @@
 .root-node {
   width: 100px;
   height: 100px;
-  background-color: #6366f1;
+  background-color: #2c3e50;
   border-radius: 50%;
   display: flex;
   flex-direction: column;
@@ -49,7 +49,7 @@
   align-items: center;
   color: white;
   font-weight: bold;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 8px rgba(12, 74, 110, 0.3);
   position: relative;
   transition: all 0.3s ease;
   z-index: 11;
@@ -57,7 +57,7 @@
 
 .root-node:hover {
   transform: scale(1.05);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 12px rgba(12, 74, 110, 0.4);
 }
 
 .add-factory-btn {
@@ -66,7 +66,7 @@
   right: -10px;
   width: 36px;
   height: 36px;
-  background-color: #22c55e;
+  background-color: #0ea5e9;
   border: none;
   border-radius: 50%;
   display: flex;
@@ -74,7 +74,7 @@
   align-items: center;
   color: white;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 4px rgba(12, 74, 110, 0.2);
   z-index: 20;
   transition: all 0.3s ease;
   opacity: 0;
@@ -84,7 +84,7 @@
 
 .add-factory-btn:hover {
   transform: scale(1.1);
-  background-color: #16a34a;
+  background-color: #0284c7;
 }
 
 .root-node:hover .add-factory-btn {
@@ -131,8 +131,8 @@
 }
 
 .connection-status.connected {
-  background-color: #dcfce7;
-  color: #16a34a;
+  background-color: #ecfeff;
+  color: #0891b2;
 }
 
 .connection-status.disconnected {
@@ -146,7 +146,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(249, 250, 251, 0.8);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -155,6 +155,7 @@
 
 .spinner {
   animation: spin 1s linear infinite;
+  color: #0369a1;
 }
 
 .factory-form-overlay {
@@ -163,7 +164,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(12, 74, 110, 0.25);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -176,12 +177,12 @@
   border-radius: 8px;
   width: 400px;
   max-width: 90%;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 16px rgba(12, 74, 110, 0.15);
 }
 
 .factory-form h3 {
   margin-top: 0;
-  color: #1e293b;
+  color: #0c4a6e;
   margin-bottom: 16px;
 }
 
