@@ -20,35 +20,24 @@
   animation: formAppear 0.3s ease;
 }
 
-@keyframes formAppear {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
 .form-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid #e2e8f0; /* Slate 200 */
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .form-header h3 {
   margin: 0;
-  color: #1e293b; /* Slate 800 */
+  color: #1e293b;
   font-size: 18px;
 }
 
 .close-btn {
   background: none;
   border: none;
-  color: #64748b; /* Slate 500 */
+  color: #64748b;
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
@@ -59,8 +48,8 @@
 }
 
 .close-btn:hover {
-  background-color: #f1f5f9; /* Slate 100 */
-  color: #0f172a; /* Slate 900 */
+  background-color: #f1f5f9;
+  color: #0f172a;
 }
 
 form {
@@ -86,14 +75,14 @@ label {
   display: block;
   margin-bottom: 6px;
   font-weight: 500;
-  color: #334155; /* Slate 700 */
+  color: #334155;
   font-size: 14px;
 }
 
 input {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #cbd5e1; /* Slate 300 */
+  border: 1px solid #cbd5e1;
   border-radius: 4px;
   font-size: 14px;
   transition: all 0.2s ease;
@@ -101,12 +90,12 @@ input {
 
 input:focus {
   outline: none;
-  border-color: #3b82f6; /* Blue 500 */
+  border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 input.error {
-  border-color: #ef4444; /* Red 500 */
+  border-color: #ef4444;
 }
 
 input.error:focus {
@@ -114,13 +103,13 @@ input.error:focus {
 }
 
 .error-message {
-  color: #ef4444; /* Red 500 */
+  color: #ef4444;
   font-size: 12px;
   margin-top: 4px;
 }
 
 .input-hint {
-  color: #64748b; /* Slate 500 */
+  color: #64748b;
   font-size: 12px;
   margin-top: 4px;
 }
@@ -135,8 +124,8 @@ input.error:focus {
 .cancel-button {
   padding: 8px 16px;
   background-color: white;
-  color: #64748b; /* Slate 500 */
-  border: 1px solid #cbd5e1; /* Slate 300 */
+  color: #64748b;
+  border: 1px solid #cbd5e1;
   border-radius: 4px;
   font-size: 14px;
   font-weight: 500;
@@ -145,13 +134,13 @@ input.error:focus {
 }
 
 .cancel-button:hover {
-  background-color: #f1f5f9; /* Slate 100 */
-  color: #334155; /* Slate 700 */
+  background-color: #f1f5f9;
+  color: #334155;
 }
 
 .save-button {
   padding: 8px 16px;
-  background-color: #3b82f6; /* Blue 500 */
+  background-color: #3b82f6;
   color: white;
   border: none;
   border-radius: 4px;
@@ -162,10 +151,20 @@ input.error:focus {
 }
 
 .save-button:hover {
-  background-color: #2563eb; /* Blue 600 */
+  background-color: #2563eb;
 }
 
-/* Responsive adjustments */
+@keyframes formAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 @media (max-width: 480px) {
   .form-row {
     flex-direction: column;

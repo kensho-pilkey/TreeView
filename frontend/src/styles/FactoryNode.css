@@ -7,12 +7,11 @@
   align-items: center;
 }
 
-/* Factory node styling */
 .factory-node {
   position: absolute;
   width: 100px;
   height: 70px;
-  background-color: #f97316; /* Orange color */
+  background-color: #f97316;
   border-radius: 4px;
   display: flex;
   flex-direction: column;
@@ -21,7 +20,6 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   z-index: 5;
-  /* This is the key for positioning the factory at its center */
   transform: translate(-50%, -50%);
 }
 
@@ -65,27 +63,27 @@
 }
 
 .edit-btn {
-  background-color: #3b82f6; /* Blue color */
+  background-color: #3b82f6;
 }
 
 .edit-btn:hover {
-  background-color: #2563eb; /* Darker blue on hover */
+  background-color: #2563eb;
 }
 
 .generate-btn {
-  background-color: #22c55e; /* Green color */
+  background-color: #22c55e;
 }
 
 .generate-btn:hover {
-  background-color: #16a34a; /* Darker green on hover */
+  background-color: #16a34a;
 }
 
 .delete-btn {
-  background-color: #ef4444; /* Red color */
+  background-color: #ef4444;
 }
 
 .delete-btn:hover {
-  background-color: #dc2626; /* Darker red on hover */
+  background-color: #dc2626;
 }
 
 .factory-info {
@@ -101,31 +99,28 @@
   text-overflow: ellipsis;
 }
 
-/* Children container */
 .children-container {
   position: absolute;
   width: 100%;
   height: 100%;
   top: 0;
   left: 0;
-  pointer-events: none; /* Allow clicks to pass through to elements below */
+  pointer-events: none;
 }
 
-/* Connector lines */
 .connector-line {
   position: absolute;
   height: 1px;
-  background-color: #cbd5e1; /* Slate color */
+  background-color: #cbd5e1;
   transform-origin: left center;
-  pointer-events: none; /* Allow clicks to pass through */
+  pointer-events: none;
 }
 
-/* Child nodes */
 .child-node {
   position: absolute;
   width: 36px;
   height: 36px;
-  background-color: #a855f7; /* Purple color */
+  background-color: #a855f7;
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -134,10 +129,10 @@
   font-size: 12px;
   font-weight: bold;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transform: translate(-50%, -50%); /* Center the node on its position */
+  transform: translate(-50%, -50%);
   z-index: 3;
   transition: all 0.3s ease;
-  pointer-events: auto; /* Restore pointer events for child nodes */
+  pointer-events: auto;
 }
 
 .child-node:hover {
@@ -146,7 +141,10 @@
   z-index: 4;
 }
 
-/* Animation for new children */
+.child-node.new {
+  animation: popIn 0.4s ease forwards;
+}
+
 @keyframes popIn {
   0% {
     opacity: 0;
@@ -161,11 +159,6 @@
   }
 }
 
-.child-node.new {
-  animation: popIn 0.4s ease forwards;
-}
-
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .factory-node {
     width: 90px;
