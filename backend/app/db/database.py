@@ -20,8 +20,13 @@ if DATABASE_URL:
 
 engine = create_async_engine(
     DATABASE_URL,
-    echo=True,  # Make sure to set to False in production
+    echo=False,
     future=True,
+    pool_size=5,
+    max_overflow=10,
+    pool_timeout=30,
+    pool_recycle=1800,
+    pool_pre_ping=True,
 )
 
 async_session_factory = sessionmaker(
@@ -35,7 +40,7 @@ Base = declarative_base()
 async def init_db():
     try:
         async with engine.begin() as conn:
-            # Uncomment vvv for first run or when models change 
+            # Uncomment line below for first run or when DB models change
             # await conn.run_sync(Base.metadata.drop_all)
             await conn.run_sync(Base.metadata.create_all)
         print("Connected to PostgreSQL database")
