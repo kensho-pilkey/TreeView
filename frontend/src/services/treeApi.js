@@ -2,10 +2,8 @@
  * API service for interacting with the Factory Tree backend
  */
 
-// Base URL for API endpoints - replace with your actual API URL
-// In production, you would use environment variables
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-const WEBSOCKET_URL = import.meta.env.VITE_WEBSOCKET_URL || 'ws://localhost:8000/ws';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const WEBSOCKET_URL = import.meta.env.VITE_WEBSOCKET_URL;
 
 /**
  * Handles API errors and returns a standardized error object
