@@ -29,7 +29,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Function to create default tree if none exists
 async def create_default_tree():
     try:
         async with async_session_factory() as db:  # Change AsyncSession() to async_session_factory()
@@ -80,7 +79,7 @@ async def root():
     return JSONResponse(
         status_code=200,
         content={
-            "message": "Welcome to the Tree Visualization API",
+            "message": "Welcome to the Live Tree API",
             "docs": "/docs",
             "redoc": "/redoc"
         }
