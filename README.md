@@ -90,6 +90,7 @@ livetree/
 │   │   │   ├── FactoryForm.jsx
 │   │   │   ├── FactoryNode.jsx
 │   │   │   └── TreeView.jsx
+│   │   ├── context/          # React context
 │   │   ├── hooks/            # Custom React hooks
 │   │   ├── services/         # API services
 │   │   ├── styles/           # CSS files
@@ -98,11 +99,11 @@ livetree/
 ├── backend/                  # FastAPI backend
 │   ├── app/
 │   │   ├── api/              # API endpoints
-│   │   ├── core/             # Core functionality
 │   │   ├── db/               # Database models and config
 │   │   ├── schemas/          # Pydantic schemas
+│   │   ├── services/         # Backend services
 │   │   └── websockets/       # WebSocket implementation
-│   ├── main.py               # Entry point
+│   ├── run.py                # Entry point
 │   └── requirements.txt
 └── README.md
 ```
