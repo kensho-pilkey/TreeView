@@ -35,6 +35,7 @@ const actionTypes = {
   SOCKET_DISCONNECTED: 'SOCKET_DISCONNECTED',
   SOCKET_UPDATE_TREE: 'SOCKET_UPDATE_TREE',
   SOCKET_UPDATE_FACTORY: 'SOCKET_UPDATE_FACTORY',
+  SOCKET_UPDATE_CHILDREN: 'SOCKET_UPDATE_CHILDREN', // New action type
   SOCKET_DELETE_FACTORY: 'SOCKET_DELETE_FACTORY',
   SOCKET_ERROR: 'SOCKET_ERROR',
   CLEAR_ERROR: 'CLEAR_ERROR'
@@ -78,10 +79,9 @@ const treeReducer = (state, action) => {
           ...state.tree,
           factories: state.tree.factories.map(factory => {
             if (factory.id === action.payload.id) {
-              // Preserve the existing children when updating a factory
               return {
                 ...action.payload,
-                children: factory.children || [] // Keep existing children
+                children: factory.children || []
               };
             }
             return factory;
@@ -179,6 +179,23 @@ const treeReducer = (state, action) => {
         };
       }
       
+    case actionTypes.SOCKET_UPDATE_CHILDREN:
+      return {
+        ...state,
+        tree: {
+          ...state.tree,
+          factories: state.tree.factories.map(factory => {
+            if (factory.id === action.payload.factoryId) {
+              return {
+                ...factory,
+                children: action.payload.children
+              };
+            }
+            return factory;
+          })
+        }
+      };
+      
     case actionTypes.SOCKET_DELETE_FACTORY:
       return {
         ...state,
@@ -201,7 +218,6 @@ const treeReducer = (state, action) => {
   }
 };
 
-// Create the context
 const TreeContext = createContext();
 
 /**
@@ -210,19 +226,17 @@ const TreeContext = createContext();
 export const TreeProvider = ({ children }) => {
   const [state, dispatch] = useReducer(treeReducer, initialState);
   
-  // Handle WebSocket messages
+
   const handleWebSocketMessage = useCallback((data) => {
-    console.log('WebSocket message received:', data);
+    // console.log('WebSocket message received:', data);
     
-    // Match the backend's action-based message format
     switch (data.action) {
       case 'connection_established':
-        console.log('WebSocket connection established', data.data);
+        // console.log('WebSocket connection established', data.data);
         dispatch({ type: actionTypes.SOCKET_CONNECTED });
         break;
         
       case 'factory_created':
-        // Map backend data to our frontend structure
         const newFactory = {
           id: data.data.id,
           name: data.data.name,
@@ -235,46 +249,30 @@ export const TreeProvider = ({ children }) => {
         break;
         
       case 'factory_updated':
-        // Find existing factory to preserve its children
-        const existingFactory = state.tree.factories.find(
-          factory => factory.id === data.data.id
-        );
-
-        // Map backend data to our frontend structure while preserving children
+ 
         const updatedFactory = {
           id: data.data.id,
           name: data.data.name,
           lowerBound: data.data.lower_bound,
           upperBound: data.data.upper_bound,
-          childCount: data.data.child_count,
-          // Preserve existing children
-          children: existingFactory ? existingFactory.children : []
+          childCount: data.data.child_count
         };
         
         dispatch({ type: actionTypes.SOCKET_UPDATE_FACTORY, payload: updatedFactory });
         break;
         
       case 'children_generated':
-        // Get the factory that needs to be updated
-        const factoryToUpdate = state.tree.factories.find(
-          factory => factory.id === data.data.factory_id
-        );
-        
-        if (factoryToUpdate) {
-          // Map the children data from backend to frontend structure
-          const mappedChildren = data.data.children.map(child => ({
-            id: child.id,
-            value: child.value
-          }));
-          
-          // Create updated factory object with new children
-          const factoryWithChildren = {
-            ...factoryToUpdate,
-            children: mappedChildren
-          };
-          
-          dispatch({ type: actionTypes.SOCKET_UPDATE_FACTORY, payload: factoryWithChildren });
-        }
+        // No longer trying to find existing factory - use the new action type
+        dispatch({ 
+          type: actionTypes.SOCKET_UPDATE_CHILDREN, 
+          payload: {
+            factoryId: data.data.factory_id,
+            children: data.data.children.map(child => ({
+              id: child.id,
+              value: child.value
+            }))
+          }
+        });
         break;
         
       case 'factory_deleted':
@@ -287,14 +285,13 @@ export const TreeProvider = ({ children }) => {
         
       case 'client_disconnected':
       case 'pong':
-        // These are informational only, no state updates needed
-        console.log(`Received ${data.action} message:`, data.data);
+        // console.log(`Received ${data.action} message:`, data.data);
         break;
         
       default:
         console.warn('Unknown WebSocket message action:', data.action);
     }
-  }, [state.tree.factories]);
+  }, []); // FIXED: Empty dependency array - no longer depends on state.tree.factories
   
   // Set up WebSocket connection
   const { connectionStatus, error: socketError } = useWebSocket(
@@ -339,7 +336,6 @@ export const TreeProvider = ({ children }) => {
     fetchInitialTree();
   }, []);
   
-  // Factory operations
   const addFactory = async (factoryData) => {
     dispatch({ type: actionTypes.ADD_FACTORY_START });
     
@@ -364,7 +360,6 @@ export const TreeProvider = ({ children }) => {
     dispatch({ type: actionTypes.UPDATE_FACTORY_START });
     
     try {
-      // Find the existing factory to preserve its children
       const existingFactory = state.tree.factories.find(
         factory => factory.id === factoryId
       );
@@ -372,7 +367,6 @@ export const TreeProvider = ({ children }) => {
       const response = await treeApi.updateFactory(factoryId, factoryData);
       
       if (response.success) {
-        // Preserve children from the existing factory in the updated factory data
         const updatedFactoryWithChildren = {
           ...response.data,
           children: existingFactory ? existingFactory.children : []
@@ -459,7 +453,6 @@ export const TreeProvider = ({ children }) => {
   );
 };
 
-// Custom hook to use the tree context
 export const useTree = () => {
   const context = useContext(TreeContext);
   
