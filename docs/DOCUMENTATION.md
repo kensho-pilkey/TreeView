@@ -8,7 +8,6 @@ This documentation describes the LiveTree web application - a real-time interact
 - [Architecture](#architecture)
 - [Frontend Documentation](#frontend-documentation)
   - [Components](#components)
-  - [State Management](#state-management)
   - [WebSocket Integration](#websocket-integration)
 - [Backend Documentation](#backend-documentation)
   - [API Endpoints](#api-endpoints)
@@ -61,123 +60,149 @@ LiveTree follows a client-server architecture with separate frontend and backend
 
 #### TreeView Component
 
-The TreeView component is the main visualization component that renders the tree structure with its factory nodes and children.
+The TreeView component is the main visualization component that renders the tree structure with its factory nodes and children. Instead of receiving props, it directly accesses state and methods through the TreeContext:
 
 ```jsx
-<TreeView 
-  factories={factories}
-  onFactoryCreate={handleFactoryCreate}
-  onFactoryUpdate={handleFactoryUpdate}
-  onFactoryDelete={handleFactoryDelete}
-  onGenerateChildren={handleGenerateChildren}
-/>
+const TreeView = () => {
+  const { 
+    tree, 
+    loading, 
+    error, 
+    socketConnected,
+    addFactory, 
+    updateFactory, 
+    deleteFactory, 
+    generateChildren,
+    clearError 
+  } = useTree();
+  
+  // Component implementation
+}
 ```
 
-**Props:**
-- `factories`: Array of factory objects
-- `onFactoryCreate`: Callback for creating a new factory
-- `onFactoryUpdate`: Callback for updating a factory
-- `onFactoryDelete`: Callback for deleting a factory
-- `onGenerateChildren`: Callback for generating children for a factory
+**Context Usage:**
+- `tree`: Contains the full tree structure including factories and their children
+- `loading`: Boolean indicating if operations are in progress
+- `error`: Error information if an operation fails
+- `socketConnected`: WebSocket connection status
+- `addFactory`: Method to create a new factory
+- `updateFactory`: Method to update an existing factory
+- `deleteFactory`: Method to delete a factory
+- `generateChildren`: Method to generate children for a factory
+- `clearError`: Method to clear any error state
+
+The TreeView component handles:
+- Displaying factories in a circular layout around a central root node
+- Dynamically adjusting zoom level based on number of factories (`zoomed-out`, `zoomed-out-more`, or `zoomed-out-max` classes)
+- Managing state for editing factories and showing the factory form
+- Providing connection status indicators (connected/disconnected)
+- Displaying loading indicators during operations
 
 #### FactoryNode Component
 
 The FactoryNode component renders an individual factory with its properties and child nodes in a circular layout.
 
 ```jsx
-<FactoryNode
-  factory={factory}
-  onEdit={handleEdit}
-  onDelete={handleDelete}
-  onGenerateChildren={handleGenerateChildren}
-/>
+const FactoryNode = ({ factory, zoomLevel, onEdit, onDelete, onGenerateChildren }) => {
+  // Component implementation
+}
 ```
 
 **Props:**
 - `factory`: Factory object with properties and children
+- `zoomLevel`: Current zoom level (controls radius for child node spacing)
 - `onEdit`: Callback for editing the factory
 - `onDelete`: Callback for deleting the factory
 - `onGenerateChildren`: Callback for generating children
 
 The FactoryNode component is visually represented as:
 - A rectangular node displaying factory name, range, and child count
-- Smaller circular child nodes arranged evenly around the factory
+- Smaller circular child nodes arranged evenly around the factory node
 - Connecting lines between the factory and each child
 - Control buttons (edit, generate, delete) that appear on hover
+
+The component dynamically adjusts the radius of child nodes based on the zoom level:
+```jsx
+let radius = 140; 
+if (zoomLevel === 'zoomed-out') radius = 130;
+if (zoomLevel === 'zoomed-out-more') radius = 120;  
+if (zoomLevel === 'zoomed-out-max') radius = 110;
+```
 
 #### FactoryForm Component
 
 The FactoryForm component provides the interface for creating and editing factories.
 
 ```jsx
-<FactoryForm
-  initialValues={factory}
-  onSubmit={handleSubmit}
-  onCancel={handleCancel}
-/>
+const FactoryForm = ({ factory, onSave, onCancel }) => {
+  // Component implementation
+}
 ```
 
 **Props:**
-- `initialValues`: Initial form values (optional)
-- `onSubmit`: Callback for form submission
-- `onCancel`: Callback for canceling the form
+- `factory`: Factory object to edit (null for creating a new factory)
+- `onSave`: Callback function when form is submitted with valid data
+- `onCancel`: Callback function to cancel editing
 
-### State Management
-
-LiveTree uses React Context and hooks for state management. Main state components:
-
-#### Factory State
-
+The form manages its own state and validation:
 ```jsx
-const { 
-  factories,
-  loading,
-  error,
-  createFactory,
-  updateFactory,
-  deleteFactory,
-  generateChildren
-} = useFactories();
+const [formData, setFormData] = useState({
+  name: '',
+  lowerBound: 1,
+  upperBound: 100,
+  childCount: 5
+});
+  
+const [errors, setErrors] = useState({});
 ```
 
-#### WebSocket State
+The form includes:
+- Factory name input with validation (letters, numbers, spaces only; max 30 chars)
+- Lower and upper bound inputs for random number range
+- Child count input with validation (1-15 children)
+- Cross-field validation (e.g., upper bound must be greater than lower bound)
+- Maximum range validation (range cannot exceed 1,000,000)
+- Cancel and Save/Create buttons
 
-```jsx
-const {
-  connected,
-  lastUpdate,
-  connect,
-  disconnect
-} = useWebSocket();
-```
+The FactoryForm appears as a modal overlay and includes real-time validation feedback as users interact with the form.
 
 ### WebSocket Integration
 
-The frontend establishes a WebSocket connection to receive real-time updates from other users:
+The frontend establishes a WebSocket connection to receive real-time updates using a custom `useWebSocket` hook:
 
 ```javascript
-// WebSocketService.js
-const connectWebSocket = () => {
-  const socket = new WebSocket(`wss://${window.location.host}/ws`);
+// hooks/useWebSocket.js
+const useWebSocket = (url, onMessage, reconnectDelay = 1000, maxReconnectAttempts = 10) => {
+  const [connectionStatus, setConnectionStatus] = useState('CLOSED');
+  const [error, setError] = useState(null);
   
-  socket.onopen = () => {
-    setConnected(true);
-  };
+  // Create and manage socket connection
+  const connect = useCallback(() => {
+    const socket = new WebSocket(url);
+    
+    socket.onopen = () => setConnectionStatus('OPEN');
+    
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      onMessage(data);
+    };
+    
+    socket.onclose = () => {
+      setConnectionStatus('CLOSED');
+      // Attempt reconnection with exponential backoff
+      attemptReconnect();
+    };
+    
+    return socket;
+  }, [url, onMessage]);
   
-  socket.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    handleUpdate(data);
-  };
+  // Other implementation details
   
-  socket.onclose = () => {
-    setConnected(false);
-    // Attempt reconnection
-    setTimeout(connectWebSocket, 5000);
-  };
-  
-  return socket;
+  return { connectionStatus, error, sendMessage, disconnect, reconnect: connect };
 };
 ```
+
+The hook is used in TreeContext to handle various message types (factory creation, updates, etc.) and update the UI in real-time.
 
 ## Backend Documentation
 
@@ -268,17 +293,27 @@ This three-tier structure allows for a flexible hierarchy where multiple factori
 The backend implements a WebSocket server to push real-time updates to all connected clients:
 
 ```python
-# websocket.py
-@app.websocket("/ws")
+# app/api/routes/websocket.py
+@router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    await websocket_manager.connect(websocket)
+    await manager.connect(websocket)
+    
     try:
+        await websocket_service.send_connection_established(websocket)
+        
         while True:
             data = await websocket.receive_text()
-            await websocket_manager.broadcast(data)
+            message = json.loads(data)
+            action = message.get("action")
+            
+            if action == "ping":
+                await websocket_service.handle_ping(websocket, message.get("timestamp"))
+            else:
+                await websocket_service.send_error_message(websocket, f"Unrecognized action")
+                
     except WebSocketDisconnect:
-        websocket_manager.disconnect(websocket)
+        manager.disconnect(websocket)
+        await websocket_service.broadcast_client_disconnected()
 ```
 
-
+The WebSocket implementation handles client connections, processes messages including ping/pong for connection maintenance, and broadcasts updates when database changes occur.
