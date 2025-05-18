@@ -1,7 +1,5 @@
 # LiveTree Documentation
 
-This documentation describes the LiveTree web application - a real-time interactive tree visualization tool that allows users to create and manage factory nodes that generate random numbers.
-
 ## Table of Contents
 
 - [Overview](#overview)
