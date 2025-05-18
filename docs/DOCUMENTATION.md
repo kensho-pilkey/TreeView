@@ -1,7 +1,5 @@
 # LiveTree Documentation
 
-## Table of Contents
-
 - [Overview](#overview)
 - [Architecture](#architecture)
 - [Frontend Documentation](#frontend-documentation)
